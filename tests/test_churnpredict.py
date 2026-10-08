@@ -1,16 +1,28 @@
 """Real tests for the ChurnPredict pipeline."""
 
+import numpy as np
 import pandas as pd
 import pytest
 
 from churnpredict import (
     FEATURE_COLUMNS,
     TARGET,
+    evaluate,
     generate_dataset,
     load_model,
     save_model,
     train_models,
 )
+
+
+def test_evaluate_metrics_stay_in_unit_interval():
+    y_true = np.array([0, 1, 1, 0, 1, 0, 0, 1])
+    y_pred = np.array([0, 1, 0, 0, 1, 1, 0, 1])
+    y_proba = np.array([0.1, 0.9, 0.4, 0.2, 0.8, 0.6, 0.3, 0.7])
+    m = evaluate(y_true, y_pred, y_proba)
+    for key in ("accuracy", "precision", "recall", "f1", "roc_auc"):
+        assert 0.0 <= m[key] <= 1.0, f"{key} out of range"
+    assert m["confusion_matrix"] == [[3, 1], [1, 3]]
 
 
 def test_generate_dataset_shape_and_labels():
